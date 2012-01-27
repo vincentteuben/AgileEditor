@@ -86,4 +86,25 @@ public class SyntaxHighlighterTest {
 		assertEquals( CodePart.TEXT, line.get(1).getDataType() );
 		assertEquals( " s = 0;", line.get(1).getContent() );		
 	}
+	
+	@Test
+	public void test_a_keyword_highlighting() {
+		ArrayList<CodePart> line = syntax.highlight("return i;");
+		assertEquals( 2, line.size() );
+		assertEquals( CodePart.KEYWORD, line.get(0).getDataType() );
+		assertEquals( "return", line.get(0).getContent() );		
+		assertEquals( CodePart.TEXT, line.get(1).getDataType() );
+		assertEquals( " i;", line.get(1).getContent() );		
+	}
+	
+	@Test
+	public void acceptence_test_a_line_of_code() {
+		ArrayList<CodePart> line = syntax.highlight("for( int i=0; i<10; i++ ); // loop");
+		assertEquals( 5, line.size() );
+		//CodePart p = new CodePart( CodePart.KEYWORD, "for" );
+		assertEquals( CodePart.KEYWORD, line.get(0).getDataType() );
+		assertEquals( "for", line.get(0).getContent() );
+		//assertEquals( "for", line.get(0).getContent() );
+		//assertTrue( p.equals( line.get(0) ));
+	}
 }
