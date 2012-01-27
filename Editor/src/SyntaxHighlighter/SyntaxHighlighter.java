@@ -9,46 +9,65 @@ public class SyntaxHighlighter {
 		this.language = scheme;
 	}
 
-	public String highlight(String line) {
-		String result = line;
+	private ArrayList<CodePart> highlightDataTypes(ArrayList<CodePart> lines, String[] types) {
+		ArrayList<CodePart> result = new ArrayList<CodePart>();
 		
-		result = highlightComments(result);		
-		result = highlightTypes(result, language.getDataTypes() );
+		for( CodePart l: lines )
+		{	
+			if ( hasType(l, types))
+			{
+				for( String type: types )
+					result.addAll( highlightDataType( l, type ) );
+			}
+			else
+				result.add(l);
+		}
 		
 		return result;
 	}
 
-	private String highlightTypes(String result, String[] types) {
-		for( String type: types )
-			result = highlightType( result, type );
-		return result;
-	}
-
-	private String highlightComments(String result) {
-		//result = highlightCppComment( result );
-		result = highlightCComment( result );
+	private ArrayList<CodePart> highlightComments(ArrayList<CodePart> line) {
+		ArrayList<CodePart> result = new ArrayList<CodePart>();
+		result.addAll(line);
+		
+		if (hasCComments(result))
+			result = highlightCComment( result );
+		if (hasCppComments(result))
+			result = highlightCppComment( result );
+		
 		return result;
 	}
 	
-	private String highlightCComment( String line )
+	private ArrayList<CodePart> highlightCComment( ArrayList<CodePart> lines )
 	{
-		if (line.contains("/*") && line.contains("*/"))
-		{
-			String before = line.substring(0,line.indexOf("/*"));
-			String comment = line.substring(line.indexOf("/*"), line.indexOf("*/") + 2);
-			String after = line.substring(line.indexOf("*/") + 2);
+		ArrayList<CodePart> result = new ArrayList<CodePart>();
+		
+		for( CodePart l: lines )
+		{	
+			String line = l.getContent();
+			if (line.contains("/*") && (line.contains("*/")))
+			{
+				String before = line.substring(0,line.indexOf("/*"));
+				String comment = line.substring(line.indexOf("/*"), line.indexOf("*/") + 2);
+				String after = line.substring(line.indexOf("*/") + 2);
+				
+				if (before.length()>0)
+					result.add( new CodePart( CodePart.TEXT, before ) );
 
-			line = ( before + "<comment>" + comment + "</comment>" + after );
+				result.add( new CodePart( CodePart.COMMENT, comment ) );				
+				
+				if (after.length()>0)
+					result.add( new CodePart( CodePart.TEXT, after ) );
+			}
 		}
-
-		return line;
+		return result;
 	}
 
-	private ArrayList<SyntaxHighlightedLine> highlightCppComment(ArrayList<SyntaxHighlightedLine> lines)
+	private ArrayList<CodePart> highlightCppComment(ArrayList<CodePart> lines)
 	{
-		ArrayList<SyntaxHighlightedLine> result = new ArrayList<SyntaxHighlightedLine>();
+		ArrayList<CodePart> result = new ArrayList<CodePart>();
 		
-		for( SyntaxHighlightedLine l: lines )
+		for( CodePart l: lines )
 		{
 			String line = l.getContent();
 			if (line.contains("//"))
@@ -57,57 +76,82 @@ public class SyntaxHighlighter {
 				String comment = line.substring(line.indexOf("//"));
 				result.clear();
 				if (before.length()>0)
-					result.add( new SyntaxHighlightedLine( SyntaxHighlightedLine.TEXT, before ) );
-				result.add( new SyntaxHighlightedLine( SyntaxHighlightedLine.COMMENT, comment ) );				
+					result.add( new CodePart( CodePart.TEXT, before ) );
+				result.add( new CodePart( CodePart.COMMENT, comment ) );				
 			}
 		}
 		return result;
 	}
 	
-	private String highlightType( String line, String type )
+	private ArrayList<CodePart> highlightDataType( CodePart l, String type )
 	{
-		if (line.contains(type))
-		{
-			int startPos = line.indexOf(type);
-			int endPos = startPos + type.length();
-			line = "<type>" + line.substring(startPos, endPos) + "</type>" + line.substring(endPos);
-		}
+		ArrayList<CodePart> result = new ArrayList<CodePart>();
 
-		return line;	
+			String line = l.getContent();
+			if (line.contains(type))
+			{
+				String before = line.substring(0,line.indexOf(type));
+				String datatype = line.substring(line.indexOf(type), line.indexOf(type)+type.length());
+				String after = line.substring(line.indexOf(type)+type.length());
+				if (before.length()>0)
+					result.add( new CodePart( CodePart.TEXT, before));
+				if (datatype.length()>0)
+					result.add( new CodePart( CodePart.DATATYPE, datatype));
+				if (after.length()>0)
+					result.add( new CodePart( CodePart.TEXT, after));
+			}
+
+		return result;	
 	}
 	
-	private ArrayList<SyntaxHighlightedLine> highlightLine( String line )
-	{
-		ArrayList<SyntaxHighlightedLine> result = new ArrayList<SyntaxHighlightedLine>();
-		result.add( new SyntaxHighlightedLine( SyntaxHighlightedLine.TEXT, line) );
-		return result;
-		
-	}
-
-	public ArrayList<SyntaxHighlightedLine> highlightline(String line) {
-		ArrayList<SyntaxHighlightedLine> result = new ArrayList<SyntaxHighlightedLine>();
+	public ArrayList<CodePart> highlight(String line) {
+		ArrayList<CodePart> result = new ArrayList<CodePart>();
 		
 		// Start with 1 part, all text
-		result.addAll( highlightLine( line ) );
+		result.add( new CodePart( CodePart.TEXT, line) );
 		
 		// Check if there are tokens that need to be replaced in the line
-		if (hasComments(result))
-			result = highlightCppComment( result );
+		result = highlightComments(result);
+		
+		// Highlight types
+		result = highlightDataTypes(result, language.getDataTypes());
 		
 		return result;
 	}
 
-	private boolean hasComments(ArrayList<SyntaxHighlightedLine> lines) {
-		for( SyntaxHighlightedLine l: lines )
+	private boolean hasCComments(ArrayList<CodePart> lines) {
+		for( CodePart l: lines )
 		{
 			String line = l.getContent();
-			if ( ( l.getText() == SyntaxHighlightedLine.TEXT ) && 
-					( ( line.contains("//") ) || ( line.contains("/*") ) || ( line.contains("*/") ) ) )
+			if ( ( l.getDataType() == CodePart.TEXT ) && 
+					( ( line.contains("/*") ) && ( line.contains("*/") ) ) )
 			{
 				return true;
 			}
 		}
 		
+		return false;
+	}
+
+	private boolean hasCppComments(ArrayList<CodePart> lines) {
+		for( CodePart l: lines )
+		{
+			String line = l.getContent();
+			if ( ( l.getDataType() == CodePart.TEXT ) && 
+					( line.contains("//") ) )
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+	private boolean hasType(CodePart l, String[] types) {
+		for (String t: types) {
+			if (l.getContent().contains(t))
+				return true;
+		}
 		return false;
 	}
 }

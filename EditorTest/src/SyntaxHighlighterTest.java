@@ -6,8 +6,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import SyntaxHighlighter.CodePart;
 import SyntaxHighlighter.LanguageC;
-import SyntaxHighlighter.SyntaxHighlightedLine;
 import SyntaxHighlighter.SyntaxHighlighter;
 
 public class SyntaxHighlighterTest {
@@ -25,45 +25,65 @@ public class SyntaxHighlighterTest {
 
 	@Test
 	public void test_get_a_line_without_highlighting() {
-		ArrayList<SyntaxHighlightedLine> line = syntax.highlightline("this is a test");
+		ArrayList<CodePart> line = syntax.highlight("this is a test");
 		assertEquals( 1, line.size() );
-		assertEquals( SyntaxHighlightedLine.TEXT, line.get(0).getText() );
+		assertEquals( CodePart.TEXT, line.get(0).getDataType() );
 		assertEquals( "this is a test", line.get(0).getContent() );		
 	}
 
 	@Test
 	public void test_cpp_style_comment_highlighting() {
-		ArrayList<SyntaxHighlightedLine> line = syntax.highlightline("// This is a comment");
+		ArrayList<CodePart> line = syntax.highlight("// This is a comment");
 		assertEquals( 1, line.size() );
-		assertEquals( SyntaxHighlightedLine.COMMENT, line.get(0).getText() );
+		assertEquals( CodePart.COMMENT, line.get(0).getDataType() );
 		assertEquals( "// This is a comment", line.get(0).getContent() );		
 	}
 	
 	@Test
 	public void test_cpp_style_comment_after_code_highlighting() {
-		ArrayList<SyntaxHighlightedLine> line = syntax.highlightline("asdf //foo");
+		ArrayList<CodePart> line = syntax.highlight("asdf //foo");
 		assertEquals( 2, line.size() );
-		assertEquals( SyntaxHighlightedLine.TEXT, line.get(0).getText() );
+		assertEquals( CodePart.TEXT, line.get(0).getDataType() );
 		assertEquals( "asdf ", line.get(0).getContent() );		
-		assertEquals( SyntaxHighlightedLine.COMMENT, line.get(1).getText() );
+		assertEquals( CodePart.COMMENT, line.get(1).getDataType() );
 		assertEquals( "//foo", line.get(1).getContent() );		
 	}
 	
 	// TODO: I was here...
 	@Test
 	public void test_c_style_comment_highlighting() {
-		assertEquals( "<comment>/* test */</comment>", syntax.highlight("/* test */"));
+		ArrayList<CodePart> line = syntax.highlight("/* test */");
+		assertEquals( 1, line.size() );
+		assertEquals( CodePart.COMMENT, line.get(0).getDataType() );
+		assertEquals( "/* test */", line.get(0).getContent() );		
 	}
 	
 	@Test
 	public void test_c_style_comment_in_line_highlighting() {
-		assertEquals( "a = <comment>/*10*/</comment>11;", syntax.highlight("a = /*10*/11;"));		
-	}
+		ArrayList<CodePart> line = syntax.highlight("a = /*10*/11;");
+		assertEquals( 3, line.size() );
+		assertEquals( CodePart.TEXT, line.get(0).getDataType() );
+		assertEquals( "a = ", line.get(0).getContent() );		
+		assertEquals( CodePart.COMMENT, line.get(1).getDataType() );
+		assertEquals( "/*10*/", line.get(1).getContent() );		
+		assertEquals( CodePart.TEXT, line.get(2).getDataType() );
+		assertEquals( "11;", line.get(2).getContent() );		
+}
 	
 	@Test
 	public void test_get_a_type_highlighting() {
-		assertEquals( "<type>int</type> i;", syntax.highlight("int i;"));
-		assertEquals( "<type>char</type> c;", syntax.highlight("char c;"));
-		assertEquals( "<type>short</type> s;", syntax.highlight("short s;"));
+		ArrayList<CodePart> line = syntax.highlight("int i;");
+		assertEquals( 2, line.size() );
+		assertEquals( CodePart.DATATYPE, line.get(0).getDataType() );
+		assertEquals( "int", line.get(0).getContent() );		
+		assertEquals( CodePart.TEXT, line.get(1).getDataType() );
+		assertEquals( " i;", line.get(1).getContent() );		
+
+		line = syntax.highlight("short s = 0;");
+		assertEquals( 2, line.size() );
+		assertEquals( CodePart.DATATYPE, line.get(0).getDataType() );
+		assertEquals( "short", line.get(0).getContent() );		
+		assertEquals( CodePart.TEXT, line.get(1).getDataType() );
+		assertEquals( " s = 0;", line.get(1).getContent() );		
 	}
 }

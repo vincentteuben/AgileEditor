@@ -1,24 +1,25 @@
 package SyntaxHighlighter;
 
-public class SyntaxHighlightedLine {
+public class CodePart {
 
 	public static final String TEXT = "text";
 	public static final String COMMENT = "comment";
+	public static final String DATATYPE = "datatype";
 
-	private String type;
+	private String datatype;
 	private String content;
 	
-	public SyntaxHighlightedLine() {
+	public CodePart() {
 		this( TEXT, "" );
 	}
 	
-	public SyntaxHighlightedLine( String type, String content ) {
-		this.type = type;
+	public CodePart( String datatype, String content ) {
+		this.datatype = datatype;
 		this.content = content;
 	}
 	
-	public String getText() {
-		return type;
+	public String getDataType() {
+		return datatype;
 	}
 
 	public String getContent() {
