@@ -1,12 +1,14 @@
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import SyntaxHighlighter.LanguageC;
+import SyntaxHighlighter.SyntaxHighlightedLine;
 import SyntaxHighlighter.SyntaxHighlighter;
-
 
 public class SyntaxHighlighterTest {
 
@@ -23,19 +25,31 @@ public class SyntaxHighlighterTest {
 
 	@Test
 	public void test_get_a_line_without_highlighting() {
-		assertEquals( "this is a test", syntax.highlight("this is a test"));
+		ArrayList<SyntaxHighlightedLine> line = syntax.highlightline("this is a test");
+		assertEquals( 1, line.size() );
+		assertEquals( SyntaxHighlightedLine.TEXT, line.get(0).getText() );
+		assertEquals( "this is a test", line.get(0).getContent() );		
 	}
 
 	@Test
 	public void test_cpp_style_comment_highlighting() {
-		assertEquals( "<comment>// This is a comment</comment>", syntax.highlight("// This is a comment"));
+		ArrayList<SyntaxHighlightedLine> line = syntax.highlightline("// This is a comment");
+		assertEquals( 1, line.size() );
+		assertEquals( SyntaxHighlightedLine.COMMENT, line.get(0).getText() );
+		assertEquals( "// This is a comment", line.get(0).getContent() );		
 	}
 	
 	@Test
 	public void test_cpp_style_comment_after_code_highlighting() {
-		assertEquals( "asdf <comment>//foo</comment>", syntax.highlight("asdf //foo"));
+		ArrayList<SyntaxHighlightedLine> line = syntax.highlightline("asdf //foo");
+		assertEquals( 2, line.size() );
+		assertEquals( SyntaxHighlightedLine.TEXT, line.get(0).getText() );
+		assertEquals( "asdf ", line.get(0).getContent() );		
+		assertEquals( SyntaxHighlightedLine.COMMENT, line.get(1).getText() );
+		assertEquals( "//foo", line.get(1).getContent() );		
 	}
 	
+	// TODO: I was here...
 	@Test
 	public void test_c_style_comment_highlighting() {
 		assertEquals( "<comment>/* test */</comment>", syntax.highlight("/* test */"));

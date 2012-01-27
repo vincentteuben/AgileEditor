@@ -1,4 +1,7 @@
 package SyntaxHighlighter;
+
+import java.util.ArrayList;
+
 public class SyntaxHighlighter {
 	private Language language;
 	
@@ -22,7 +25,7 @@ public class SyntaxHighlighter {
 	}
 
 	private String highlightComments(String result) {
-		result = highlightCppComment( result );
+		//result = highlightCppComment( result );
 		result = highlightCComment( result );
 		return result;
 	}
@@ -41,16 +44,24 @@ public class SyntaxHighlighter {
 		return line;
 	}
 
-	private String highlightCppComment(String line)
+	private ArrayList<SyntaxHighlightedLine> highlightCppComment(ArrayList<SyntaxHighlightedLine> lines)
 	{
-		if (line.contains("//"))
+		ArrayList<SyntaxHighlightedLine> result = new ArrayList<SyntaxHighlightedLine>();
+		
+		for( SyntaxHighlightedLine l: lines )
 		{
-			String before = line.substring(0,line.indexOf("//"));
-			String comment = line.substring(line.indexOf("//"));
-			line = ( before + "<comment>" + comment + "</comment>" );
+			String line = l.getContent();
+			if (line.contains("//"))
+			{
+				String before = line.substring(0,line.indexOf("//"));
+				String comment = line.substring(line.indexOf("//"));
+				result.clear();
+				if (before.length()>0)
+					result.add( new SyntaxHighlightedLine( SyntaxHighlightedLine.TEXT, before ) );
+				result.add( new SyntaxHighlightedLine( SyntaxHighlightedLine.COMMENT, comment ) );				
+			}
 		}
-
-		return line;
+		return result;
 	}
 	
 	private String highlightType( String line, String type )
@@ -64,5 +75,39 @@ public class SyntaxHighlighter {
 
 		return line;	
 	}
+	
+	private ArrayList<SyntaxHighlightedLine> highlightLine( String line )
+	{
+		ArrayList<SyntaxHighlightedLine> result = new ArrayList<SyntaxHighlightedLine>();
+		result.add( new SyntaxHighlightedLine( SyntaxHighlightedLine.TEXT, line) );
+		return result;
+		
+	}
 
+	public ArrayList<SyntaxHighlightedLine> highlightline(String line) {
+		ArrayList<SyntaxHighlightedLine> result = new ArrayList<SyntaxHighlightedLine>();
+		
+		// Start with 1 part, all text
+		result.addAll( highlightLine( line ) );
+		
+		// Check if there are tokens that need to be replaced in the line
+		if (hasComments(result))
+			result = highlightCppComment( result );
+		
+		return result;
+	}
+
+	private boolean hasComments(ArrayList<SyntaxHighlightedLine> lines) {
+		for( SyntaxHighlightedLine l: lines )
+		{
+			String line = l.getContent();
+			if ( ( l.getText() == SyntaxHighlightedLine.TEXT ) && 
+					( ( line.contains("//") ) || ( line.contains("/*") ) || ( line.contains("*/") ) ) )
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
 }
